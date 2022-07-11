@@ -8,6 +8,7 @@
 // Level 8 AI = ~2250
 
 var TABID = null;
+var stockfish = null;
 
 function parseMove(moveRaw) {
     if (moveRaw.indexOf('bestmove') > -1) {
@@ -34,7 +35,7 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     //first time, create canvas and draw first move
     if(request.type == "init"){
-        var stockfish = new Worker(chrome.extension.getURL('lib/stockfish.js'));
+        stockfish = new Worker(chrome.extension.getURL('lib/stockfish.js'));
         stockfish.postMessage('uci');
         stockfish.postMessage('isready');
         stockfish.postMessage('ucinewgame');
@@ -43,13 +44,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         stockfish.onmessage = function(event) {
             parseMove(event.data);
         }
-        stockfish.postMessage('go depth 10');
-        stockfish.postMessage('go movetime 200');
+        stockfish.postMessage('go depth 15');
+        stockfish.postMessage('go movetime 1000');
     }
     if(request.type === 'move_made') {
-        console.log("calcule next move");
-        // stockfish.postMessage('position fen ' + request.text);
-        // stockfish.postMessage('go movetime 200');
+        console.log(request.FEN);
+        stockfish.postMessage('position fen ' + request.FEN);
+        stockfish.postMessage('go movetime 1000');
     }
     sendResponse();
 });

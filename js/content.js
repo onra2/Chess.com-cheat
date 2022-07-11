@@ -76,7 +76,6 @@ window.addEventListener("message", function (event) {
 
 //listen to background.js
 chrome.runtime.onMessage.addListener(function(result) {
-	console.log(result);
 	if(result.type === "init"){
 		injectJavaScript("js/listener.js", function () {
 		    console.log("injected listener.js");
