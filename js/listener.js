@@ -5,10 +5,9 @@ var FEN = "";
 var observerMoves = new MutationObserver(function(mutations) {
     console.log("moveList changed");
     lastMove = element.item(0).board.game.getLastMove().san;
-    window.postMessage({ 
+    window.postMessage({
         type: 'move_made',
         text: lastMove,
-        boardFlip: chessBoard.boardFlip
     }, '*');
 });
 
@@ -32,7 +31,7 @@ function addObserverIfDesiredNodeAvailable() {
         playingAs = element.item(0).board.game.getPlayingAs();
 
         window.postMessage({
-            type: 'draw_canvas',
+            type: 'init',
             playingAs: playingAs,
             FEN: FEN
         }, '*');
