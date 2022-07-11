@@ -2,7 +2,7 @@
 var FEN = "";
 
 var observerMoves = new MutationObserver(function(mutations) {
-    const element = document.querySelectorAll('.play-controller-moveList.vertical-move-list');
+    const element = document.querySelectorAll('vertical-move-list');
     const FEN = element.item(0).board.game.getFEN();
     window.postMessage({
         type: 'move_made',
@@ -11,10 +11,8 @@ var observerMoves = new MutationObserver(function(mutations) {
 });
 
 function addObserverIfDesiredNodeAvailable() {
-    const element = document.querySelectorAll('.play-controller-moveList.vertical-move-list');
+    const element = document.querySelectorAll('vertical-move-list');
     if(!element) {
-        //The node we need does not exist yet.
-        //Wait 500ms and try again
         window.setTimeout(addObserverIfDesiredNodeAvailable,500);
         return;
     }

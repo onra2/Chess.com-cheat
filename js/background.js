@@ -45,12 +45,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             parseMove(event.data);
         }
         stockfish.postMessage('go depth 15');
-        stockfish.postMessage('go movetime 1000');
+        stockfish.postMessage('go movetime 200');
     }
     if(request.type === 'move_made') {
         console.log(request.FEN);
         stockfish.postMessage('position fen ' + request.FEN);
-        stockfish.postMessage('go movetime 1000');
+        stockfish.postMessage('go movetime 200');
     }
     sendResponse();
 });
