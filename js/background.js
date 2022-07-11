@@ -44,3 +44,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
     sendResponse();
 });
+
+$("#set-level").click(function () {
+    var radioValue = $("input[name='level']:checked").val();
+    if(stockfish){
+        stockfish.postMessage('setoption name Skill Level value ' + radioValue);
+    }
+});
