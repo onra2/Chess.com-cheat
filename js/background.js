@@ -1,12 +1,3 @@
-// Level 1 AI = ~850
-// Level 2 AI = ~950
-// Level 3 AI = ~1050
-// Level 4 AI = ~1250
-// Level 5 AI = ~1700
-// Level 6 AI = ~1900
-// Level 7 AI = ~2000
-// Level 8 AI = ~2250
-
 var TABID = null;
 var stockfish = null;
 
@@ -48,7 +39,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         stockfish.postMessage('go movetime 200');
     }
     if(request.type === 'move_made') {
-        console.log(request.FEN);
         stockfish.postMessage('position fen ' + request.FEN);
         stockfish.postMessage('go movetime 200');
     }
