@@ -1,91 +1,18 @@
-﻿var observer = new MutationObserver(function(mutations) {
-    var elements = document.querySelectorAll('.piece');
-    for(var i = 0; i < elements.length; i++) {
-        var element = elements[i];
-        if(element.id.indexOf('dummyBoard') === -1) {
-            if(!element.ready) {
-                element.ready = true;
-                window.postMessage({type: 'draw_canvas'}, '*');
-                var chessBoard = element.chessBoard;
-                
-                //console.log(element.chessBoard);
-                if(chessBoard) {
-                    // console.log(chessBoard);
-                    chessBoard._customEventStacks['onAfterMoveAnimated'].stack.push({
-                        callback: function(e) {
-                            var fen = chessBoard.getBoardApi().getProperty('selectedFen');
-
-                            var message = {
-                                type: 'move_made',
-                                text: fen
-                            };
-
-                            window.postMessage({ type: 'move_made', text: fen, boardFlip: chessBoard.boardFlip }, '*');
-                        }
-                    });    
-
-                    chessBoard._customEventStacks['onDropPiece'].stack.push({
-                        callback: function(e) {
-                            var message = {
-                                type: 'clear_canvas'
-                            };
-
-                            window.postMessage(message, '*');
-                        }
-                    });           
-                }
-            }
-        }
-    }
-});
+﻿var playingAs = 1;//1 white, 2 black
+var lastMove = "";
+var FEN = "";
 
 var observerMoves = new MutationObserver(function(mutations) {
     console.log("moveList changed");
-    // const element = document.getElementsByClassName('play-controller-moveList vertical-move-list');
-    // console.log(element);
-    // console.log(element.length);
-    // console.log(element.item(0));
-    // for(var i = 0; i < elements.length; i++) {
-    //     var element = elements[i];
-    //     if(element.id.indexOf('dummyBoard') === -1) {
-    //         if(!element.ready) {
-    //             element.ready = true;
-    //             window.postMessage({type: 'draw_canvas'}, '*');
-    //             var chessBoard = element.chessBoard;
-                
-    //             //console.log(element.chessBoard);
-    //             if(chessBoard) {
-    //                 // console.log(chessBoard);
-    //                 chessBoard._customEventStacks['onAfterMoveAnimated'].stack.push({
-    //                     callback: function(e) {
-    //                         var fen = chessBoard.getBoardApi().getProperty('selectedFen');
-
-    //                         var message = {
-    //                             type: 'move_made',
-    //                             text: fen
-    //                         };
-
-    //                         window.postMessage({ type: 'move_made', text: fen, boardFlip: chessBoard.boardFlip }, '*');
-    //                     }
-    //                 });    
-
-    //                 chessBoard._customEventStacks['onDropPiece'].stack.push({
-    //                     callback: function(e) {
-    //                         var message = {
-    //                             type: 'clear_canvas'
-    //                         };
-
-    //                         window.postMessage(message, '*');
-    //                     }
-    //                 });           
-    //             }
-    //         }
-    //     }
-    // }
+    lastMove = element.item(0).board.game.getLastMove().san;
+    window.postMessage({ 
+        type: 'move_made',
+        text: lastMove,
+        boardFlip: chessBoard.boardFlip
+    }, '*');
 });
 
 function addObserverIfDesiredNodeAvailable() {
-    //const element = document.getElementsByClassName('play-controller-moveList vertical-move-list');
     const element = document.querySelectorAll('.play-controller-moveList.vertical-move-list');
     if(!element) {
         //The node we need does not exist yet.
@@ -100,25 +27,29 @@ function addObserverIfDesiredNodeAvailable() {
         return;
     }
     else{
-        console.log(element);
-        console.log(element.item(0).board);
-        console.log(element.item(0).moveList);
+        //init canvas
+        FEN = element.item(0).board.game.getFEN();
+        playingAs = element.item(0).board.game.getPlayingAs();
 
-        var configBoard = {
+        window.postMessage({
+            type: 'draw_canvas',
+            playingAs: playingAs,
+            FEN: FEN
+        }, '*');
+
+        // console.log(element);
+        // console.log(element.item(0).board);
+        // console.log(element.item(0).board.game.getFEN());
+        // console.log(element.item(0).board.game.getPlayingAs());
+        // console.log(element.item(0).board.game.getLastMove().san);
+
+        var configMoves = {
             childList: true, 
             subtree: true, 
             attributes: false, 
             characterData: false
         };
-        observer.observe(element.item(0).board, configBoard);
-
-        var config = {
-            childList: true, 
-            subtree: true, 
-            attributes: false, 
-            characterData: false
-        };
-        observerMoves.observe(element.item(0), config);
+        observerMoves.observe(element.item(0), configMoves);
     }
 }
 

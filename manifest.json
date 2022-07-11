@@ -18,7 +18,8 @@
     "128": "images/icon128.png" 
   },
   "background": {
-    "scripts": [ "js/background.js" ]
+    "scripts": [ "js/background.js" ],
+    "persistent": true
   },
   "content_scripts": [
     {
@@ -27,7 +28,8 @@
         "lib/jquery-3.6.0.min.js",
         "lib/jcanvas.min.js",
         "js/content.js" 
-      ]
+      ],
+      "run_at": "document_end"
     }
   ],
   "permissions": [

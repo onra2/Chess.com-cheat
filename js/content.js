@@ -1,3 +1,18 @@
+function parseMove(moveRaw) {
+    if (moveRaw.indexOf('bestmove') > -1) {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            var currTab = tabs[0];
+            if (currTab) {
+                var bestmove = moveRaw.slice(9, moveRaw.indexOf('ponder') -1);
+                var ponder = moveRaw.slice(moveRaw.indexOf('ponder') + 7, moveRaw.length);
+                console.log(bestmove);
+                console.log(ponder);
+                chrome.tabs.sendMessage(currTab.id, {type: 'draw_best_move', text: bestmove});
+            }
+        });
+    }
+}
+
 function injectJavaScript(scriptName, callback) {
 	var script = document.createElement("script");
 	script.src = chrome.extension.getURL(scriptName);
@@ -58,13 +73,16 @@ function initializeWhite(board) {
 
 window.addEventListener("message", function (event) {
 	if (event.data.type === "draw_canvas") {
-		// draw canvas
 		var chessBoard = document.querySelector('.chessboard, .board, chess-board');
-		//initializeWhite(chessBoard);
-
-		// if(event.data.isWhite)
-		// else
-		initializeBlack(chessBoard);
+		var playingAs = event.data.playingAs;
+		if (playingAs === 1) {
+			console.log("playing white");
+			initializeWhite(chessBoard);
+		}
+		else {
+			console.log("playing black");
+			initializeBlack(chessBoard);
+		}
 
 		var canvas = document.createElement("canvas");
 		canvas.id = "canvas";
@@ -75,6 +93,7 @@ window.addEventListener("message", function (event) {
 		canvas.style.top = 0;
 
 		chessBoard.appendChild(canvas);
+		chrome.runtime.sendMessage(event.data, function (response) {});
 	}
 
 	if (event.data.type === "clear_canvas") {
@@ -88,6 +107,13 @@ window.addEventListener("message", function (event) {
 });
 
 chrome.runtime.onMessage.addListener(function(result) {  // extension -> content-script listener
+	console.log(result);
+	if(result.type === "init"){
+		injectJavaScript("js/listener.js", function () {
+		    console.log("injected listener.js");
+		});
+		sendResponse({success: true});
+	}
     if(result.type === 'draw_best_move' && result.text) {
         var moveFrom = result.text.substring(0, 2);
         var moveTo = result.text.substring(2, 4);
@@ -109,6 +135,3 @@ chrome.runtime.onMessage.addListener(function(result) {  // extension -> content
     }
 });
 
-injectJavaScript("js/listener.js", function () {
-    console.log("injected listener.js");
-});
