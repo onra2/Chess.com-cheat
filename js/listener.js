@@ -40,6 +40,7 @@
 });
 
 var observerMoves = new MutationObserver(function(mutations) {
+    console.log("moveList changed");
     // const element = document.getElementsByClassName('play-controller-moveList vertical-move-list');
     // console.log(element);
     // console.log(element.length);
@@ -84,7 +85,8 @@ var observerMoves = new MutationObserver(function(mutations) {
 });
 
 function addObserverIfDesiredNodeAvailable() {
-    const element = document.getElementsByClassName('play-controller-moveList vertical-move-list');
+    //const element = document.getElementsByClassName('play-controller-moveList vertical-move-list');
+    const element = document.querySelectorAll('.play-controller-moveList.vertical-move-list');
     if(!element) {
         //The node we need does not exist yet.
         //Wait 500ms and try again
@@ -99,9 +101,8 @@ function addObserverIfDesiredNodeAvailable() {
     }
     else{
         console.log(element);
-        console.log(element.length);
-        console.log(element.item(0));
         console.log(element.item(0).board);
+        console.log(element.item(0).moveList);
 
         var configBoard = {
             childList: true, 
@@ -111,14 +112,13 @@ function addObserverIfDesiredNodeAvailable() {
         };
         observer.observe(element.item(0).board, configBoard);
 
-
         var config = {
             childList: true, 
             subtree: true, 
             attributes: false, 
             characterData: false
         };
-        observerMoves.observe(element, config);
+        observerMoves.observe(element.item(0), config);
     }
 }
 
