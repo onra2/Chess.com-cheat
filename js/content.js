@@ -41,6 +41,15 @@ function initializeWhite(board) {
 	}
 }
 
+function getActiveColorFromFEN(FEN) {
+    var activeColor = FEN.split(" ")[1];
+    if (activeColor == "w") {
+        return 1;//white
+    } else {
+        return 2;
+    }
+}
+
 //listen to injected script
 window.addEventListener("message", function (event) {
 	//add the canvas
@@ -48,11 +57,9 @@ window.addEventListener("message", function (event) {
 		var chessBoard = document.querySelector('.chessboard, .board, chess-board');
 		var playingAs = event.data.playingAs;
 		if (playingAs === 1) {
-			console.log("playing white");
 			initializeWhite(chessBoard);
 		}
 		else {
-			console.log("playing black");
 			initializeBlack(chessBoard);
 		}
 
@@ -70,7 +77,9 @@ window.addEventListener("message", function (event) {
 	//make a move in stockfish background
 	if (event.data.type === "move_made") {
 		$("#canvas").clearCanvas();
-		chrome.runtime.sendMessage(event.data, function (response) {});
+		if(getActiveColorFromFEN(event.data.FEN) == event.data.playingAs){
+			chrome.runtime.sendMessage(event.data, function (response) {});
+		}
 	}
 });
 
@@ -80,7 +89,6 @@ chrome.runtime.onMessage.addListener(function(result) {
 		injectJavaScript("js/listener.js", function () {
 		    console.log("injected listener.js");
 		});
-		sendResponse({success: true});
 	}
     if(result.type === 'draw_best_move' && result.text) {
         var moveFrom = result.text.substring(0, 2);
@@ -90,7 +98,7 @@ chrome.runtime.onMessage.addListener(function(result) {
         var pt = point[moveTo];
 
         $('#canvas').drawLine({
-            strokeStyle: "rgba(24,171,219,0.8)",//green
+            strokeStyle: "rgba(24, 171, 219, 0.8)",//blue
             strokeWidth: 8,
             rounded: true,
             endArrow: true,

@@ -5,9 +5,10 @@ function parseMove(moveRaw) {
     if (moveRaw.indexOf('bestmove') > -1) {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             if(TABID) {
-                var bestmove = moveRaw.slice(9, moveRaw.indexOf('ponder') -1);
-                var ponder = moveRaw.slice(moveRaw.indexOf('ponder') + 7, moveRaw.length);
+                var bestmove = moveRaw.slice(9, moveRaw.indexOf('ponder') - 1);
                 chrome.tabs.sendMessage(TABID, {type: 'draw_best_move', text: bestmove});
+
+                var ponder = moveRaw.slice(moveRaw.indexOf('ponder') + 7, moveRaw.length);
                 chrome.tabs.sendMessage(TABID, {type: 'draw_ponder_move', text: ponder});
             }
         });
@@ -28,14 +29,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if(request.type == "init"){
         stockfish = new Worker(chrome.extension.getURL('lib/stockfish.js'));
         stockfish.postMessage('uci');
-        stockfish.postMessage('isready');
-        stockfish.postMessage('ucinewgame');
-        stockfish.postMessage('position fen ' + request.FEN);
         stockfish.postMessage('setoption name Skill Level value 3');
         stockfish.onmessage = function(event) {
             parseMove(event.data);
         }
-        stockfish.postMessage('go depth 15');
+        stockfish.postMessage('position fen ' + request.FEN);
         stockfish.postMessage('go movetime 200');
     }
     if(request.type === 'move_made') {

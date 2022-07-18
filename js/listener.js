@@ -4,8 +4,11 @@ var FEN = "";
 var observerMoves = new MutationObserver(function(mutations) {
     const element = document.querySelectorAll('vertical-move-list');
     const FEN = element.item(0).board.game.getFEN();
+    playingAs = element.item(0).board.game.getPlayingAs();
+
     window.postMessage({
         type: 'move_made',
+        playingAs: playingAs,
         FEN: FEN,
     }, '*');
 });
