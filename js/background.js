@@ -1,5 +1,6 @@
 var TABID = null;
 var stockfish = null;
+var mode = "go movetime 200";
 
 function parseMove(moveRaw) {
     if (moveRaw.indexOf('bestmove') > -1) {
@@ -29,23 +30,27 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if(request.type == "init"){
         stockfish = new Worker(chrome.extension.getURL('lib/stockfish.js'));
         stockfish.postMessage('uci');
-        stockfish.postMessage('setoption name Skill Level value 3');
+        stockfish.postMessage('setoption name Skill Level value 5');
         stockfish.onmessage = function(event) {
             parseMove(event.data);
         }
         stockfish.postMessage('position fen ' + request.FEN);
-        stockfish.postMessage('go movetime 200');
+        stockfish.postMessage(mode);
     }
     if(request.type === 'move_made') {
         stockfish.postMessage('position fen ' + request.FEN);
-        stockfish.postMessage('go movetime 200');
+        stockfish.postMessage(mode);
+    }
+    if(request.type === 'set-level') {
+        stockfish.postMessage('setoption name Skill Level value ' + request.radioValue);
+    }
+    if(request.type === 'set-mode') {
+        const modeRequest = request.radioValue;
+        if(modeRequest == "1"){
+            mode = "go movetime 200";
+        }else{
+            mode = "go depth 20";
+        }
     }
     sendResponse();
-});
-
-$("#set-level").click(function () {
-    var radioValue = $("input[name='level']:checked").val();
-    if(stockfish){
-        stockfish.postMessage('setoption name Skill Level value ' + radioValue);
-    }
 });
