@@ -49,7 +49,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if(modeRequest == "1"){
             mode = "go movetime 200";
         }else{
-            mode = "go depth 20";
+            mode = "go depth 15";
         }
     }
     sendResponse();
