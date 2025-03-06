@@ -9,6 +9,40 @@ var rank = ["a", "b", "c", "d", "e", "f", "g", "h"];
 var rankBlack = ["h", "g", "f", "e", "d", "c", "b", "a"];
 var point = [];
 
+let stockfish = null;
+async function loadStockfish() {
+    // Charger le fichier Stockfish.js en tant que texte
+    const response = await fetch(chrome.runtime.getURL('lib/stockfish.js'));
+    const stockfishScript = await response.text();
+
+    // Créer un Blob avec le script
+    const blob = new Blob([stockfishScript], { type: 'application/javascript' });
+    const blobURL = URL.createObjectURL(blob);
+
+    // Lancer le Web Worker avec le Blob URL
+    stockfish = new Worker(blobURL);
+
+    stockfish.postMessage('uci');
+    stockfish.postMessage('setoption name Skill Level value 8');
+
+    stockfish.onmessage = function (event) {
+        const moveRaw = event.data;
+        if (moveRaw.indexOf('bestmove') > -1) {
+            const bestmove = moveRaw.slice(9, moveRaw.indexOf('ponder') - 1);
+            drawBestMove(bestmove);
+            const pondermove = moveRaw.slice(moveRaw.indexOf('ponder') + 7, moveRaw.length);
+            drawPonderMove(pondermove);
+        }
+    };
+
+    return stockfish;
+}
+
+// Exécuter la fonction immédiatement
+loadStockfish().then((stockfish) => {
+    console.log("Stockfish loaded!");
+});
+
 function initializeBlack(board) {
     board.position = "relative";
     var itemWidth = board.offsetWidth / 8;
@@ -70,22 +104,30 @@ function drawBestMove(bestmove){
     });
 }
 
-// Load Stockfish as a Worker in the content script
-const stockfish = new Worker(chrome.runtime.getURL('lib/stockfish.js'));
-// Initialize Stockfish
-stockfish.postMessage('uci');
-stockfish.postMessage('setoption name Skill Level value 5');
-stockfish.onmessage = function (event) {
-    const moveRaw = event.data;
-    if (moveRaw.indexOf('bestmove') > -1) {
-        const bestmove = moveRaw.slice(9, moveRaw.indexOf('ponder') - 1);
-        drawBestMove(bestmove);
-        // window.postMessage({ type: 'draw_best_move', text: bestmove }, '*');
+function drawPonderMove(pondermove){
+    var moveFrom = pondermove.substring(0, 2);
+    var moveTo = pondermove.substring(2, 4);
 
-        const ponder = moveRaw.slice(moveRaw.indexOf('ponder') + 7, moveRaw.length);
-        // window.postMessage({ type: 'draw_ponder_move', text: ponder }, '*');
-    }
-};
+    var pf = point[moveFrom];
+    var pt = point[moveTo];
+
+    $('#canvas').drawLine({
+        strokeStyle: "rgba(191,63,63,0.8)",//red
+        strokeWidth: 8,
+        rounded: true,
+        endArrow: true,
+        startArrow: false,
+        arrowRadius: 15,
+        arrowAngle: 45,
+        x1: pf.width, y1: pf.height,
+        x2: pt.width, y2: pt.height
+    });
+}
+
+function processFEN(fen) {
+    stockfish.postMessage('position fen ' + fen);
+    stockfish.postMessage('go movetime 200');
+}
 
 // Listen for messages from the injected script
 window.addEventListener('message', (event) => {
@@ -115,64 +157,32 @@ window.addEventListener('message', (event) => {
         canvas.style.top = 0;
 
         chessBoard.appendChild(canvas);
-        stockfish.postMessage('position fen ' + gameInfo.fen);
-        stockfish.postMessage('go movetime 200');
+        processFEN(gameInfo.fen);
     }
     if (event.data && event.data.type === 'move_made') {
         const gameInfo = {
             fen: event.data.gameInfo.fen,
             playingAs: event.data.gameInfo.playingAs,
         }
-        console.log('gameInfo 3:', gameInfo.fen);
-        console.log('gameInfo 4:', gameInfo.playingAs);
+        // console.log('gameInfo 3:', gameInfo.fen);
+        // console.log('gameInfo 4:', gameInfo.playingAs);
 
         $("#canvas").clearCanvas();
         if (getActiveColorFromFEN(gameInfo.fen) == gameInfo.playingAs) {
-            stockfish.postMessage('position fen ' + gameInfo.fen);
-            stockfish.postMessage('go movetime 200');
+            processFEN(gameInfo.fen);
         }
     }
 });
 
-
-//listen to background.js
-// chrome.runtime.onMessage.addListener(function (result) {
-//     if (result.type === 'draw_best_move' && result.text) {
-//         var moveFrom = result.text.substring(0, 2);
-//         var moveTo = result.text.substring(2, 4);
-
-//         var pf = point[moveFrom];
-//         var pt = point[moveTo];
-
-//         $('#canvas').drawLine({
-//             strokeStyle: "rgba(24, 171, 219, 0.8)",//blue
-//             strokeWidth: 8,
-//             rounded: true,
-//             endArrow: true,
-//             startArrow: false,
-//             arrowRadius: 15,
-//             arrowAngle: 45,
-//             x1: pf.width, y1: pf.height,
-//             x2: pt.width, y2: pt.height
-//         });
-//     }
-//     // if (result.type === 'draw_ponder_move' && result.text) {
-//     //     var moveFrom = result.text.substring(0, 2);
-//     //     var moveTo = result.text.substring(2, 4);
-
-//     //     var pf = point[moveFrom];
-//     //     var pt = point[moveTo];
-
-//     //     $('#canvas').drawLine({
-//     //         strokeStyle: "rgba(191,63,63,0.8)",//red
-//     //         strokeWidth: 8,
-//     //         rounded: true,
-//     //         endArrow: true,
-//     //         startArrow: false,
-//     //         arrowRadius: 15,
-//     //         arrowAngle: 45,
-//     //         x1: pf.width, y1: pf.height,
-//     //         x2: pt.width, y2: pt.height
-//     //     });
-//     // }
-// });
+// Listen to background.js
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.type === 'set-level') {
+        console.log("Updating Stockfish level to:", request.radioValue);
+        stockfish.postMessage(`setoption name Skill Level value ${request.radioValue}`);
+    }
+    if (request.type === 'set-mode') {
+        console.log("Updating Stockfish mode to:", request.radioValue);
+        const mode = request.radioValue === "1" ? "go movetime 200" : "go depth 15";
+        stockfish.postMessage(mode);
+    }
+});

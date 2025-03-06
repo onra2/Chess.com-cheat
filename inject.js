@@ -1,6 +1,6 @@
 // inject.js
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 100;
 let retryCount = 0;
 
 // Helper function to extract game info
@@ -20,7 +20,7 @@ function findBoard() {
             console.error(`Element not found. Retry attempt ${retryCount}...`);
             window.setTimeout(findBoard, 1000); // Retry with a delay
         } else {
-            console.error("Element not found after 3 retries.");
+            console.error(`Element not found after ${MAX_RETRIES} retries.`);
         }
         return;
     }
