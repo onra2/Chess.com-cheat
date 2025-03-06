@@ -1,7 +1,13 @@
 function injectJavaScript(scriptName, callback) {
 	var script = document.createElement("script");
-	script.src = chrome.extension.getURL(scriptName);
-	script.addEventListener("load", callback, false);
+	script.src = chrome.runtime.getURL(scriptName);
+	script.addEventListener("load", function() {
+		console.log("Script loaded: " + scriptName);
+		callback();
+	}, false);
+	script.addEventListener("error", function() {
+		console.error("Failed to load script: " + scriptName);
+	}, false);
 	(document.head || document.documentElement).appendChild(script);
 }
 
@@ -55,6 +61,7 @@ window.addEventListener("message", function (event) {
 	//add the canvas
 	if (event.data.type === "init") {
 		var chessBoard = document.querySelector('.chessboard, .board, chess-board');
+		console.log('I GOT THE CHESSBOARD NIGGAAAAA');
 		var playingAs = event.data.playingAs;
 		if (playingAs === 1) {
 			initializeWhite(chessBoard);

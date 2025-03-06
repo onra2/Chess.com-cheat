@@ -1,16 +1,17 @@
 ﻿{
-  "manifest_version": 2,
+  "manifest_version": 3,
 
-  "name": "Chess.com Onra2",
+  "name": "Chess.com Best Move",
   "description": "",
-  "version": "0.0.1",
-  "browser_action": {
-    "default_icon": {
-      "19": "images/icon19.png",
-      "38": "images/icon38.png"
-    },
+  "version": "1.0",
+  "action": {
+    "default_title": "Chess.com Onra2",
     "default_popup": "popup.html",
-    "default_title": "Chess.com Onra2"
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
   },
   "icons": { 
     "16": "images/icon16.png",
@@ -18,27 +19,37 @@
     "128": "images/icon128.png" 
   },
   "background": {
-    "scripts": [ "lib/jquery-3.6.0.min.js", "js/background.js" ],
-    "persistent": true
+    "service_worker": "background.js"
   },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://chess.com/*",
+    "https://www.chess.com/*"
+  ],
   "content_scripts": [
     {
-      "matches": [ "http://*.chess.com/*", "https://*.chess.com/*" ],
-      "js": [ 
+      "matches": [
+        "*://*.chess.com/*"
+      ],
+      "js": [
         "lib/jquery-3.6.0.min.js",
         "lib/jcanvas.min.js",
         "js/content.js"
-      ],
-      "run_at": "document_end"
+      ]
     }
   ],
-  "permissions": [
-    "https://*.chess.com/*",
-    "http://*.chess.com/*",
-    "activeTab"
-  ],
-  "web_accessible_resources": [ 
-    "js/listener.js", 
-    "lib/stockfish.js"
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/stockfish.js",
+        "js/listener.js"
+      ],
+      "matches": [
+        "*://*.chess.com/*"
+      ]
+    }
   ]
 }
