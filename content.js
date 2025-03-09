@@ -129,50 +129,88 @@ function processFEN(fen) {
     stockfish.postMessage('go movetime 200');
 }
 
-// Listen for messages from the injected script
+let lastPlayingAs = null; // Track previous player color
+
 window.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'GET_INIT_GAME_INFO') {
         const gameInfo = {
             fen: event.data.gameInfo.fen,
             playingAs: event.data.gameInfo.playingAs,
-        }
-        // console.log('gameInfo 1:', gameInfo.fen);
-        // console.log('gameInfo 2:', gameInfo.playingAs);
+        };
 
         var chessBoard = document.querySelector('wc-chess-board');
-        // console.log('chessBoard:', chessBoard);
-        if (gameInfo.playingAs === 1) {
-            initializeWhite(chessBoard);
-        }
-        else {
-            initializeBlack(chessBoard);
+
+        // **Check if the player's color changed, and reinitialize if needed**
+        if (lastPlayingAs !== gameInfo.playingAs) {
+            lastPlayingAs = gameInfo.playingAs;
+
+            // **Clear old board state**
+            if (document.getElementById("canvas")) {
+                document.getElementById("canvas").remove();
+            }
+
+            // **Reinitialize the board based on color**
+            if (gameInfo.playingAs === 1) {
+                initializeWhite(chessBoard);
+            } else {
+                initializeBlack(chessBoard);
+            }
+
+            var canvas = document.createElement("canvas");
+            canvas.id = "canvas";
+            canvas.width = chessBoard.offsetWidth;
+            canvas.height = chessBoard.offsetHeight;
+            canvas.style.position = "absolute";
+            canvas.style.left = 0;
+            canvas.style.top = 0;
+
+            chessBoard.appendChild(canvas);
         }
 
-        var canvas = document.createElement("canvas");
-        canvas.id = "canvas";
-        canvas.width = chessBoard.offsetWidth;
-        canvas.height = chessBoard.offsetHeight;
-        canvas.style.position = "absolute";
-        canvas.style.left = 0;
-        canvas.style.top = 0;
-
-        chessBoard.appendChild(canvas);
         processFEN(gameInfo.fen);
     }
+
     if (event.data && event.data.type === 'move_made') {
         const gameInfo = {
             fen: event.data.gameInfo.fen,
             playingAs: event.data.gameInfo.playingAs,
-        }
-        // console.log('gameInfo 3:', gameInfo.fen);
-        // console.log('gameInfo 4:', gameInfo.playingAs);
+        };
 
         $("#canvas").clearCanvas();
+
+        // **Reinitialize if the player's color has changed**
+        if (lastPlayingAs !== gameInfo.playingAs) {
+            lastPlayingAs = gameInfo.playingAs;
+
+            if (document.getElementById("canvas")) {
+                document.getElementById("canvas").remove();
+            }
+
+            var chessBoard = document.querySelector('wc-chess-board');
+
+            if (gameInfo.playingAs === 1) {
+                initializeWhite(chessBoard);
+            } else {
+                initializeBlack(chessBoard);
+            }
+
+            var canvas = document.createElement("canvas");
+            canvas.id = "canvas";
+            canvas.width = chessBoard.offsetWidth;
+            canvas.height = chessBoard.offsetHeight;
+            canvas.style.position = "absolute";
+            canvas.style.left = 0;
+            canvas.style.top = 0;
+
+            chessBoard.appendChild(canvas);
+        }
+
         if (getActiveColorFromFEN(gameInfo.fen) == gameInfo.playingAs) {
             processFEN(gameInfo.fen);
         }
     }
 });
+
 
 // Listen to background.js
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
