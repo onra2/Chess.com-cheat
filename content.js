@@ -129,6 +129,46 @@ function processFEN(fen) {
     stockfish.postMessage('go movetime 200');
 }
 
+/**
+ * Creates and appends the canvas element to the chessboard.
+ */
+function createCanvas(chessBoard) {
+    if (!chessBoard) return;
+
+    var canvas = document.createElement("canvas");
+    canvas.id = "canvas";
+    canvas.width = chessBoard.offsetWidth;
+    canvas.height = chessBoard.offsetHeight;
+    canvas.style.position = "absolute";
+    canvas.style.left = 0;
+    canvas.style.top = 0;
+
+    chessBoard.appendChild(canvas);
+}
+
+function reinitializeBoard(gameInfo) {
+    var chessBoard = document.querySelector('wc-chess-board');
+
+    // **Reinitialize board if color changed or if canvas is missing**
+    if (lastPlayingAs !== gameInfo.playingAs || !document.getElementById("canvas")) {
+        lastPlayingAs = gameInfo.playingAs;
+
+        // **Clear old board state**
+        if (document.getElementById("canvas")) {
+            document.getElementById("canvas").remove();
+        }
+
+        // **Reinitialize the board based on color**
+        if (gameInfo.playingAs === 1) {
+            initializeWhite(chessBoard);
+        } else {
+            initializeBlack(chessBoard);
+        }
+
+        createCanvas(chessBoard);
+    }
+}
+
 let lastPlayingAs = null; // Track previous player color
 
 window.addEventListener('message', (event) => {
@@ -138,34 +178,7 @@ window.addEventListener('message', (event) => {
             playingAs: event.data.gameInfo.playingAs,
         };
 
-        var chessBoard = document.querySelector('wc-chess-board');
-
-        // **Check if the player's color changed, and reinitialize if needed**
-        if (lastPlayingAs !== gameInfo.playingAs) {
-            lastPlayingAs = gameInfo.playingAs;
-
-            // **Clear old board state**
-            if (document.getElementById("canvas")) {
-                document.getElementById("canvas").remove();
-            }
-
-            // **Reinitialize the board based on color**
-            if (gameInfo.playingAs === 1) {
-                initializeWhite(chessBoard);
-            } else {
-                initializeBlack(chessBoard);
-            }
-
-            var canvas = document.createElement("canvas");
-            canvas.id = "canvas";
-            canvas.width = chessBoard.offsetWidth;
-            canvas.height = chessBoard.offsetHeight;
-            canvas.style.position = "absolute";
-            canvas.style.left = 0;
-            canvas.style.top = 0;
-
-            chessBoard.appendChild(canvas);
-        }
+        reinitializeBoard(gameInfo);
 
         processFEN(gameInfo.fen);
     }
@@ -178,32 +191,7 @@ window.addEventListener('message', (event) => {
 
         $("#canvas").clearCanvas();
 
-        // **Reinitialize if the player's color has changed**
-        if (lastPlayingAs !== gameInfo.playingAs) {
-            lastPlayingAs = gameInfo.playingAs;
-
-            if (document.getElementById("canvas")) {
-                document.getElementById("canvas").remove();
-            }
-
-            var chessBoard = document.querySelector('wc-chess-board');
-
-            if (gameInfo.playingAs === 1) {
-                initializeWhite(chessBoard);
-            } else {
-                initializeBlack(chessBoard);
-            }
-
-            var canvas = document.createElement("canvas");
-            canvas.id = "canvas";
-            canvas.width = chessBoard.offsetWidth;
-            canvas.height = chessBoard.offsetHeight;
-            canvas.style.position = "absolute";
-            canvas.style.left = 0;
-            canvas.style.top = 0;
-
-            chessBoard.appendChild(canvas);
-        }
+        reinitializeBoard(gameInfo);
 
         if (getActiveColorFromFEN(gameInfo.fen) == gameInfo.playingAs) {
             processFEN(gameInfo.fen);
