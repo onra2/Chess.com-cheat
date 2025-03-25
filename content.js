@@ -208,7 +208,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
     if (request.type === 'set-mode') {
         console.log("Updating Stockfish mode to:", request.radioValue);
-        const mode = request.radioValue === "1" ? "go movetime 200" : "go depth 15";
+        const mode = request.radioValue === "1" ? "go depth 15" : "go depth 245";
         stockfish.postMessage(mode);
     }
 });
